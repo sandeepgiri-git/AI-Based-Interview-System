@@ -12,6 +12,10 @@ import Link from "next/link";
 import { toast } from "sonner";
 import FormField from "./FormField";
 import { useRouter } from "next/navigation";
+import { auth } from "@/Firebase/client";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signIn, signUp } from "@/lib/actions/auth.actions";
+ 
 
 const AuthFormSchema = (type: FormType) => {
   return z.object({
@@ -33,16 +37,38 @@ const AuthForm = ({type} : {type: FormType}) => {
   });
   const router = useRouter();
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      if(type === 'sign-in'){
-        console.log("SIGN IN", values);
-        toast.success("Sign in successfully");
-        router.push('/');
+      if(type === 'sign-up'){
+        const {name, email , password,} = values;
+        
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+
+        const res = await signUp({uid: userCred.user.uid, name:name!,email, password})
+
+        if(!res?.success) {
+          toast.error(res?.message);
+          return;
+        }
+        toast.success("Account Created Successfully ! Please sign in");
+        router.push('/sign-in');
       }else{
-        console.log("SIGN UP", values);
-        toast.success("Account created Successfully!");
-        router.push("/sign-in");
+
+        const {email, password} = values;
+        
+        const userCred = await signInWithEmailAndPassword(auth, email, password);
+
+        const idToken = await userCred.user.getIdToken()
+
+        if(!idToken) {
+          toast.error("Sign in Failed")
+          return;
+        }
+
+        await signIn({email, idToken});
+
+        toast.success("Sign in Successfully!");
+        router.push("/");
       }
     } catch (error) {
       console.log(error);
@@ -56,8 +82,8 @@ const AuthForm = ({type} : {type: FormType}) => {
       <div className="card flex flex-col gap-6 px-10 py-14 ">
         <div className="flex flex-row gap-2 justify-center">
           <Image src="/logo.svg" alt="logo" height={32} width={38} />
-        </div>
         <h2 className="text-primary-100">PrepWise</h2>
+        </div>
         <h3>Practice Job interview with AI</h3>
 
         <Form {...form}>

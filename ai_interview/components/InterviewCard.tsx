@@ -1,4 +1,3 @@
-import { interviewCovers } from '@/constants';
 import dayjs from 'dayjs';
 import Image from 'next/image';
 import React from 'react'
@@ -43,8 +42,10 @@ const InterviewCard = ({interviewId, userId, role, type, techstack, createdAt}: 
             <div className='flex flex-row justify-between'>
                 <DisplayTechIcons techStack={techstack} />
                 <Button className='btn-primary'>
-                    <Link href={ feedback ? `/interview/${interviewId}/feedback` : `interview/${interviewId}`}></Link>
-                    {feedback ? "Check feedback" : "View Interview"}
+                    <Link href={ feedback ? `/interview/${interviewId}/feedback` : `interview/${interviewId}`}>
+                        {feedback ? "Check feedback" : "View Interview"}
+                    </Link>
+                    
                 </Button>
             </div>
         </div>
